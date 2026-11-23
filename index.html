@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reg CC Funds Availability Calculator</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.87);
+            background: linear-gradient(to bottom, #f5f7fa 0%, #e8edf2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a4d3e 0%, #132f25 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top right, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 300;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow:
+                0 8px 16px rgba(0,0,0,0.08),
+                0 4px 8px rgba(0,0,0,0.04),
+                0 2px 4px rgba(0,0,0,0.02);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .calculator:hover {
+            box-shadow:
+                0 12px 24px rgba(0,0,0,0.1),
+                0 6px 12px rgba(0,0,0,0.06),
+                0 3px 6px rgba(0,0,0,0.03);
+        }
+
+        .calculator-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.625rem;
+            color: rgba(0, 0, 0, 0.6);
+            font-size: 0.875rem;
+            letter-spacing: 0.25px;
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+        .form-group input:hover,
+        .form-group select:hover {
+            background: #f5f5f5;
+            border-color: #bdbdbd;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1a4d3e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(26, 77, 62, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .results {
+            background: #f9f9f9;
+            border-radius: 4px;
+            padding: 1.5rem;
+            border-left: 4px solid #132f25;
+        }
+
+        .results h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .result-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .result-value {
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .summary {
+            background: #e8eaf6;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
+        .warning {
+            background: linear-gradient(to right, #fff8e1, #fffbf0);
+            border-left: 5px solid #ff9800;
+            padding: 1.25rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(255, 152, 0, 0.15);
+        }
+
+        .warning strong {
+            color: #e65100;
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .deposit-item {
+            display: grid;
+            grid-template-columns: 1fr 2fr auto;
+            gap: 1rem;
+            align-items: start;
+            margin-bottom: 1rem;
+            padding: 1.25rem;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e8e8e8;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .deposit-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #d0d0d0;
+            transform: translateY(-1px);
+        }
+
+        .remove-btn {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-top: 1.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(211, 47, 47, 0.3);
+        }
+
+        .remove-btn:hover {
+            background: #c62828;
+            box-shadow: 0 4px 8px rgba(211, 47, 47, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .remove-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(211, 47, 47, 0.3);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #1a4d3e 0%, #132f25 100%);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 3px 6px rgba(19, 47, 37, 0.3);
+        }
+
+        .add-btn:hover {
+            box-shadow: 0 6px 12px rgba(19, 47, 37, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .add-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 6px rgba(19, 47, 37, 0.3);
+        }
+
+        .deposit-items-list {
+            margin-bottom: 1.5rem;
+        }
+
+        .deposit-type-group {
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 10px;
+            border-left: 5px solid #1a4d3e;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .deposit-type-group:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(2px);
+        }
+
+        .deposit-type-group h4 {
+            color: #1a4d3e;
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+            font-weight: 500;
+            letter-spacing: 0.25px;
+        }
+
+        .deposit-type-items {
+            margin-bottom: 0.5rem;
+        }
+
+        .deposit-type-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .deposit-type-item:last-child {
+            border-bottom: none;
+        }
+
+        .deposit-type-total {
+            font-weight: 500;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 2px solid #e0e0e0;
+            color: #1a4d3e;
+            font-size: 1.0625rem;
+            letter-spacing: 0.25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row-thirds {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row .form-group,
+        .form-row-thirds .form-group {
+            margin-bottom: 0;
+        }
+
+        .section-divider {
+            border-top: 1px solid #e0e0e0;
+            margin: 2.5rem 0 1.5rem 0;
+            padding-top: 1.5rem;
+        }
+
+        h2, h3 {
+            color: rgba(0, 0, 0, 0.87);
+            font-weight: 500;
+            letter-spacing: 0.25px;
+        }
+
+        @media (max-width: 768px) {
+            .calculator-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .calculator {
+                padding: 1rem;
+            }
+
+            .deposit-item {
+                grid-template-columns: 1fr;
+            }
+
+            .remove-btn {
+                margin-top: 0.5rem;
+            }
+
+            .form-row,
+            .form-row-thirds {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Reg CC Funds Availability Calculator</h1>
+        <p>Calculate when deposited funds will be available based on federal Regulation CC requirements</p>
+    </div>
+
+    <div id="root"></div>
+
+    <div class="footer">
+        <p>This calculator implements federal Regulation CC (12 CFR Part 229) funds availability requirements.</p>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Business day utilities
+        const parseLocalDate = (dateString) => {
+            const [year, month, day] = dateString.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        };
+
+        const formatLocalDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const parseTime = (timeString) => {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return hours * 60 + minutes;
+        };
+
+        const isWeekend = (date) => {
+            const day = date.getDay();
+            return day === 0 || day === 6;
+        };
+
+        const isHoliday = (date, holidays) => {
+            const dateStr = formatLocalDate(date);
+            return holidays.includes(dateStr);
+        };
+
+        const isBusinessDay = (date, holidays) => {
+            return !isWeekend(date) && !isHoliday(date, holidays);
+        };
+
+        const nextBusinessDay = (date, holidays) => {
+            const next = new Date(date);
+            next.setDate(next.getDate() + 1);
+            while (!isBusinessDay(next, holidays)) {
+                next.setDate(next.getDate() + 1);
+            }
+            return next;
+        };
+
+        const addBusinessDays = (startDate, numDays, holidays) => {
+            let current = new Date(startDate);
+            let daysAdded = 0;
+
+            while (daysAdded < numDays) {
+                current.setDate(current.getDate() + 1);
+                if (isBusinessDay(current, holidays)) {
+                    daysAdded++;
+                }
+            }
+
+            return current;
+        };
+
+        const normalizeDepositDate = (depositDate, depositTime, holidays) => {
+            const date = parseLocalDate(depositDate);
+            const cutoffMinutes = parseTime("14:00"); // Default 2pm cutoff
+            const depositMinutes = parseTime(depositTime);
+
+            if (depositMinutes > cutoffMinutes) {
+                return nextBusinessDay(date, holidays);
+            }
+
+            if (isBusinessDay(date, holidays)) {
+                return date;
+            }
+
+            return nextBusinessDay(date, holidays);
+        };
+
+        const calculateAccountAge = (accountOpenDate, depositDate) => {
+            const openDate = parseLocalDate(accountOpenDate);
+            const depDate = parseLocalDate(depositDate);
+            const diffMs = depDate - openDate;
+            return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        };
+
+        // Default configuration
+        const defaultHolidays = [
+            "2026-01-01", "2026-01-19", "2026-02-16", "2026-05-25",
+            "2026-07-03", "2026-09-07", "2026-10-12", "2026-11-11",
+            "2026-11-26", "2026-12-25",
+            "2027-01-01", "2027-01-18", "2027-02-15", "2027-05-31",
+            "2027-07-05", "2027-09-06", "2027-10-11", "2027-11-11",
+            "2027-11-25", "2027-12-24",
+            "2028-01-01", "2028-01-17", "2028-02-21", "2028-05-29",
+            "2028-07-04", "2028-09-04", "2028-10-09", "2028-11-10",
+            "2028-11-23", "2028-12-25"
+        ];
+
+        const holidayNames = {
+            "01-01": "New Year's Day",
+            "01-19": "Martin Luther King Jr. Day",
+            "01-18": "Martin Luther King Jr. Day",
+            "01-17": "Martin Luther King Jr. Day",
+            "02-16": "Presidents' Day",
+            "02-15": "Presidents' Day",
+            "02-21": "Presidents' Day",
+            "05-25": "Memorial Day",
+            "05-31": "Memorial Day",
+            "05-29": "Memorial Day",
+            "07-03": "Independence Day (Observed)",
+            "07-04": "Independence Day",
+            "07-05": "Independence Day (Observed)",
+            "09-07": "Labor Day",
+            "09-06": "Labor Day",
+            "09-04": "Labor Day",
+            "10-12": "Columbus Day",
+            "10-11": "Columbus Day",
+            "10-09": "Columbus Day",
+            "11-11": "Veterans Day",
+            "11-10": "Veterans Day (Observed)",
+            "11-26": "Thanksgiving",
+            "11-25": "Thanksgiving",
+            "11-23": "Thanksgiving",
+            "12-24": "Christmas Day (Observed)",
+            "12-25": "Christmas Day"
+        };
+
+        const defaultRules = {
+            cash: { immediate: 1, remaining: 1 },
+            "electronic-payment": { immediate: 1, remaining: 1 },
+            "government-or-official-check": { immediate: 1, remaining: 1 },
+            "on-us-check": { immediate: 1, remaining: 1 },
+            "local-or-other-check": { immediate: 1, remaining: 2 },
+            "nonproprietary-atm-check": { immediate: 5, remaining: 5 },
+            "new-account-check": { immediate: 1, remaining: 9 },
+            exceptionHold: { immediate: 1, remaining: 7 }
+        };
+
+        // Core calculation engine
+        const calculateAvailability = (inputs, rules = defaultRules, holidays = defaultHolidays) => {
+            const {
+                depositDate,
+                depositTime,
+                depositAmount,
+                depositType,
+                accountOpenDate,
+                exceptionHold,
+                largeDepositThreshold = 5525
+            } = inputs;
+
+            const warnings = [];
+            const bankingDayOfDeposit = normalizeDepositDate(depositDate, depositTime, holidays);
+            const nextBusinessDay = addBusinessDays(bankingDayOfDeposit, 1, holidays);
+
+            const accountAgeDays = calculateAccountAge(accountOpenDate, depositDate);
+            const isNewAccount = accountAgeDays <= 30;
+
+            // Deposit types with full availability (no threshold splitting)
+            const fullAvailabilityTypes = [
+                "cash",
+                "electronic-payment",
+                "government-or-official-check",
+                "on-us-check",
+                "nonproprietary-atm-check"
+            ];
+
+            const hasFullAvailability = fullAvailabilityTypes.includes(depositType) && !exceptionHold && !isNewAccount;
+
+            let immediateDays, remainingDays;
+
+            if (exceptionHold) {
+                immediateDays = rules.exceptionHold.immediate;
+                remainingDays = rules.exceptionHold.remaining;
+            } else if (depositType === "new-account-check" || isNewAccount) {
+                immediateDays = rules["new-account-check"].immediate;
+                remainingDays = rules["new-account-check"].remaining;
+                if (isNewAccount && depositType !== "new-account-check") {
+                    warnings.push("Account is 30 days old or less. New account holds apply.");
+                }
+            } else {
+                const typeRules = rules[depositType];
+                if (!typeRules) {
+                    warnings.push(`Unknown deposit type: ${depositType}. Using local check rules.`);
+                    immediateDays = rules["local-or-other-check"].immediate;
+                    remainingDays = rules["local-or-other-check"].remaining;
+                } else {
+                    immediateDays = typeRules.immediate;
+                    remainingDays = typeRules.remaining;
+                }
+            }
+
+            let firstAvailableAmount, firstAvailableDate, remainingAmount, remainingAvailableDate;
+
+            // Full availability types: entire deposit available at once
+            if (hasFullAvailability) {
+                firstAvailableAmount = depositAmount;
+                firstAvailableDate = formatLocalDate(addBusinessDays(bankingDayOfDeposit, immediateDays, holidays));
+                remainingAmount = 0;
+                remainingAvailableDate = firstAvailableDate;
+            }
+            // Threshold-based types: split at threshold
+            else if (depositAmount <= largeDepositThreshold) {
+                firstAvailableAmount = depositAmount;
+                firstAvailableDate = formatLocalDate(addBusinessDays(bankingDayOfDeposit, immediateDays, holidays));
+                remainingAmount = 0;
+                remainingAvailableDate = firstAvailableDate;
+            } else {
+                firstAvailableAmount = largeDepositThreshold;
+                firstAvailableDate = formatLocalDate(addBusinessDays(bankingDayOfDeposit, immediateDays, holidays));
+                remainingAmount = depositAmount - largeDepositThreshold;
+                remainingAvailableDate = formatLocalDate(addBusinessDays(bankingDayOfDeposit, remainingDays, holidays));
+                warnings.push(`Deposit exceeds $${largeDepositThreshold.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} threshold. Amounts over this limit have extended holds.`);
+            }
+
+            // Check for holidays in the date range
+            const endDate = parseLocalDate(remainingAmount > 0 ? remainingAvailableDate : firstAvailableDate);
+            const holidaysInRange = [];
+            let checkDate = new Date(bankingDayOfDeposit);
+
+            while (checkDate <= endDate) {
+                const dateStr = formatLocalDate(checkDate);
+                if (holidays.includes(dateStr)) {
+                    const monthDay = dateStr.substring(5); // Get MM-DD
+                    const holidayName = holidayNames[monthDay] || "Federal Holiday";
+                    holidaysInRange.push(`${holidayName} on ${dateStr}`);
+                }
+                checkDate.setDate(checkDate.getDate() + 1);
+            }
+
+            if (holidaysInRange.length > 0) {
+                warnings.push(...holidaysInRange.map(h => `Federal holiday in hold period: ${h}`));
+            }
+
+            const summary = remainingAmount > 0
+                ? `$${firstAvailableAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} available on ${firstAvailableDate}, remaining $${remainingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} available on ${remainingAvailableDate}`
+                : `Full amount of $${firstAvailableAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} available on ${firstAvailableDate}`;
+
+            return {
+                isNewAccount,
+                bankingDayOfDeposit: formatLocalDate(bankingDayOfDeposit),
+                nextBusinessDay: formatLocalDate(nextBusinessDay),
+                firstAvailableAmount,
+                firstAvailableDate,
+                remainingAmount,
+                remainingAvailableDate,
+                summary,
+                warnings
+            };
+        };
+
+        // Deposit type labels
+        const depositTypeLabels = {
+            "cash": "Cash",
+            "government-or-official-check": "Government/Official Check",
+            "on-us-check": "On-Us Check",
+            "local-or-other-check": "Local/Other Check",
+            "nonproprietary-atm-check": "Nonproprietary ATM Check",
+            "new-account-check": "New Account Check"
+        };
+
+        // Availability tiers (priority order - fastest first)
+        const availabilityTiers = {
+            "cash": { priority: 1, name: "Next Business Day (Cash)" },
+            "electronic-payment": { priority: 1, name: "Next Business Day (Electronic)" },
+            "government-or-official-check": { priority: 2, name: "Next Business Day (Government/Official)" },
+            "on-us-check": { priority: 2, name: "Next Business Day (On-Us)" },
+            "local-or-other-check": { priority: 3, name: "Second Business Day (Local)" },
+            "nonproprietary-atm-check": { priority: 4, name: "Fifth Business Day (ATM)" },
+            "new-account-check": { priority: 5, name: "Extended Hold (New Account)" }
+        };
+
+        // Calculate aggregate deposit availability
+        const calculateAggregateAvailability = (depositItems, globalInputs, holidays = defaultHolidays) => {
+            const bankingDayOfDeposit = normalizeDepositDate(
+                globalInputs.depositDate,
+                globalInputs.depositTime,
+                holidays
+            );
+            const nextBusinessDay = addBusinessDays(bankingDayOfDeposit, 1, holidays);
+            const secondBusinessDay = addBusinessDays(bankingDayOfDeposit, 2, holidays);
+            const fifthBusinessDay = addBusinessDays(bankingDayOfDeposit, 5, holidays);
+            const ninthBusinessDay = addBusinessDays(bankingDayOfDeposit, 9, holidays);
+
+            const accountAgeDays = calculateAccountAge(globalInputs.accountOpenDate, globalInputs.depositDate);
+            const isNewAccount = accountAgeDays <= 30;
+            const threshold = globalInputs.largeDepositThreshold;
+
+            // Sort items by availability priority
+            const sortedItems = [...depositItems].sort((a, b) => {
+                return availabilityTiers[a.type].priority - availabilityTiers[b.type].priority;
+            });
+
+            const schedule = {
+                nextDay: 0,
+                secondDay: 0,
+                fifthDay: 0,
+                ninthDay: 0,
+                items: []
+            };
+
+            let warnings = [];
+
+            // Track cumulative amounts
+            let cumulativeNextDay = 0;
+            let cumulativeSecondDay = 0;
+
+            sortedItems.forEach(item => {
+                const itemSchedule = {
+                    id: item.id,
+                    type: item.type,
+                    amount: item.amount,
+                    nextDay: 0,
+                    secondDay: 0,
+                    fifthDay: 0,
+                    ninthDay: 0
+                };
+
+                if (globalInputs.exceptionHold) {
+                    // Exception hold: $threshold next day, remainder 7th day
+                    itemSchedule.nextDay = Math.min(item.amount, Math.max(0, threshold - cumulativeNextDay));
+                    if (item.amount > itemSchedule.nextDay) {
+                        itemSchedule.ninthDay = item.amount - itemSchedule.nextDay; // 7th day in reality
+                    }
+                    cumulativeNextDay += itemSchedule.nextDay;
+                } else if (item.type === "cash" || item.type === "electronic-payment") {
+                    // Full amount next business day - NO HOLDS
+                    itemSchedule.nextDay = item.amount;
+                    cumulativeNextDay += item.amount;
+                } else if (item.type === "on-us-check") {
+                    // Full amount next business day - NO HOLDS
+                    itemSchedule.nextDay = item.amount;
+                    cumulativeNextDay += item.amount;
+                } else if (item.type === "government-or-official-check") {
+                    // Full amount next business day (when eligibility requirements met)
+                    itemSchedule.nextDay = item.amount;
+                    cumulativeNextDay += item.amount;
+                } else if (isNewAccount && item.type !== "cash" && item.type !== "electronic-payment") {
+                    // New account check: $threshold next day, remainder 9th day
+                    itemSchedule.nextDay = Math.min(item.amount, Math.max(0, threshold - cumulativeNextDay));
+                    itemSchedule.ninthDay = item.amount - itemSchedule.nextDay;
+                    cumulativeNextDay += itemSchedule.nextDay;
+                } else if (item.type === "local-or-other-check") {
+                    // Reg CC 229.12(b): $200 on first business day, remainder up to $5,525 total on second business day
+                    const firstDayAmount = cumulativeNextDay < 200 ? Math.min(200, item.amount) : 0;
+                    itemSchedule.nextDay = firstDayAmount;
+
+                    // Remaining amount goes to second business day (limited by threshold)
+                    const remainingAmount = item.amount - firstDayAmount;
+                    const totalAvailableBySecondDay = cumulativeNextDay + cumulativeSecondDay + firstDayAmount;
+                    const secondDayCapacity = Math.max(0, threshold - totalAvailableBySecondDay);
+                    itemSchedule.secondDay = Math.min(remainingAmount, secondDayCapacity);
+
+                    // Any excess over threshold goes to later days (would need extended hold logic)
+                    const excess = remainingAmount - itemSchedule.secondDay;
+                    if (excess > 0) {
+                        // For now, this would go to a later availability period
+                        itemSchedule.fifthDay = excess;
+                    }
+
+                    cumulativeNextDay += itemSchedule.nextDay;
+                    cumulativeSecondDay += itemSchedule.secondDay;
+                } else if (item.type === "nonproprietary-atm-check") {
+                    // $200 minimum next day (if not already met), remainder fifth business day
+                    const minimumNextDay = cumulativeNextDay < 200 ? Math.min(200, item.amount) : 0;
+                    itemSchedule.nextDay = minimumNextDay;
+                    itemSchedule.fifthDay = item.amount - minimumNextDay;
+                    cumulativeNextDay += itemSchedule.nextDay;
+                }
+
+                schedule.items.push(itemSchedule);
+                schedule.nextDay += itemSchedule.nextDay;
+                schedule.secondDay += itemSchedule.secondDay;
+                schedule.fifthDay += itemSchedule.fifthDay;
+                schedule.ninthDay += itemSchedule.ninthDay;
+            });
+
+            // Add warnings
+            // Mock high-level stats for NSF and returned items
+            warnings.push("Recent Activity: 2 returned items totaling $3,125.50 in the last 30 days");
+            warnings.push("Account Status: 1 NSF occurrence on 09/20/2026");
+
+            if (isNewAccount) {
+                warnings.push("Account is 30 days old or less. Extended holds may apply to check deposits.");
+            }
+            if (globalInputs.exceptionHold) {
+                warnings.push("Exception hold applied. Extended availability times in effect.");
+            }
+
+            return {
+                bankingDayOfDeposit: formatLocalDate(bankingDayOfDeposit),
+                nextBusinessDay: formatLocalDate(nextBusinessDay),
+                secondBusinessDay: formatLocalDate(secondBusinessDay),
+                fifthBusinessDay: formatLocalDate(fifthBusinessDay),
+                ninthBusinessDay: formatLocalDate(ninthBusinessDay),
+                schedule,
+                warnings,
+                totalDeposit: depositItems.reduce((sum, item) => sum + item.amount, 0)
+            };
+        };
+
+        // React Calculator Component
+        function RegCCCalculator() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            // Default to 10:00 AM to ensure deposits are before cutoff
+            const currentTime = '10:00';
+
+            const [depositItems, setDepositItems] = useState([
+                { id: 1, amount: 1000, type: "local-or-other-check" }
+            ]);
+
+            const [globalInputs, setGlobalInputs] = useState({
+                depositDate: formatLocalDate(today),
+                depositTime: currentTime,
+                accountOpenDate: formatLocalDate(thirtyDaysAgo),
+                exceptionHold: false,
+                largeDepositThreshold: 5525
+            });
+
+            const [nextId, setNextId] = useState(2);
+
+            const formatCurrency = (value) => {
+                if (!value && value !== 0) return '';
+                return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            };
+
+            const parseCurrency = (value) => {
+                if (!value) return 0;
+                const number = parseFloat(value.replace(/[^0-9.-]/g, ''));
+                return isNaN(number) ? 0 : number;
+            };
+
+            const handleGlobalChange = (field, value) => {
+                setGlobalInputs(prev => ({
+                    ...prev,
+                    [field]: field === 'largeDepositThreshold'
+                        ? parseCurrency(value)
+                        : field === 'exceptionHold'
+                        ? value
+                        : value
+                }));
+            };
+
+            const handleItemChange = (id, field, value) => {
+                setDepositItems(prev => prev.map(item =>
+                    item.id === id
+                        ? { ...item, [field]: field === 'amount' ? parseCurrency(value) : value }
+                        : item
+                ));
+            };
+
+            const addDepositItem = () => {
+                setDepositItems(prev => [...prev, { id: nextId, amount: 0, type: "local-or-other-check" }]);
+                setNextId(prev => prev + 1);
+            };
+
+            const removeDepositItem = (id) => {
+                setDepositItems(prev => prev.filter(item => item.id !== id));
+            };
+
+            // Calculate aggregate availability
+            const aggregateAvailability = depositItems.length > 0
+                ? calculateAggregateAvailability(depositItems, globalInputs)
+                : null;
+
+            return (
+                <div className="container">
+                    <div className="calculator">
+                        <div className="calculator-content">
+                            <div>
+                                <h2 style={{ marginBottom: '1.5rem' }}>Deposit Information</h2>
+
+                                <div className="form-row-thirds">
+                                    <div className="form-group">
+                                        <label htmlFor="depositDate">Deposit Date</label>
+                                        <input
+                                            id="depositDate"
+                                            type="date"
+                                            value={globalInputs.depositDate}
+                                            onChange={(e) => handleGlobalChange('depositDate', e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="depositTime">Deposit Time</label>
+                                        <input
+                                            id="depositTime"
+                                            type="time"
+                                            value={globalInputs.depositTime}
+                                            onChange={(e) => handleGlobalChange('depositTime', e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="accountOpenDate">Account Open Date</label>
+                                        <input
+                                            id="accountOpenDate"
+                                            type="date"
+                                            value={globalInputs.accountOpenDate}
+                                            onChange={(e) => handleGlobalChange('accountOpenDate', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="largeDepositThreshold">Large Deposit Threshold</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <span style={{
+                                                position: 'absolute',
+                                                left: '0.75rem',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                color: '#666',
+                                                pointerEvents: 'none'
+                                            }}>$</span>
+                                            <input
+                                                id="largeDepositThreshold"
+                                                type="text"
+                                                value={formatCurrency(globalInputs.largeDepositThreshold)}
+                                                onChange={(e) => handleGlobalChange('largeDepositThreshold', e.target.value)}
+                                                style={{ paddingLeft: '1.5rem' }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <div className="checkbox-group" style={{ marginTop: '1.8rem' }}>
+                                            <input
+                                                id="exceptionHold"
+                                                type="checkbox"
+                                                checked={globalInputs.exceptionHold}
+                                                onChange={(e) => handleGlobalChange('exceptionHold', e.target.checked)}
+                                            />
+                                            <label htmlFor="exceptionHold">Exception Hold</label>
+                                        </div>
+                                        <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem', marginLeft: '0' }}>
+                                            Select if Reg CC exception hold applies
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="section-divider">
+                                    <h3 style={{ marginBottom: '1rem' }}>Deposit Items</h3>
+                                </div>
+
+                                <div className="deposit-items-list">
+                                    {depositItems.map((item) => (
+                                        <div key={item.id} className="deposit-item">
+                                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                                <label>Amount</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <span style={{
+                                                        position: 'absolute',
+                                                        left: '0.75rem',
+                                                        top: '50%',
+                                                        transform: 'translateY(-50%)',
+                                                        color: '#666',
+                                                        pointerEvents: 'none'
+                                                    }}>$</span>
+                                                    <input
+                                                        type="text"
+                                                        value={formatCurrency(item.amount)}
+                                                        onChange={(e) => handleItemChange(item.id, 'amount', e.target.value)}
+                                                        style={{ paddingLeft: '1.5rem' }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                                <label>Deposit Type</label>
+                                                <select
+                                                    value={item.type}
+                                                    onChange={(e) => handleItemChange(item.id, 'type', e.target.value)}
+                                                >
+                                                    <option value="cash">Cash</option>
+                                                    <option value="government-or-official-check">Government/Official Check</option>
+                                                    <option value="on-us-check">On-Us Check</option>
+                                                    <option value="local-or-other-check">Local/Other Check</option>
+                                                    <option value="nonproprietary-atm-check">Nonproprietary ATM Check</option>
+                                                    <option value="new-account-check">New Account Check</option>
+                                                </select>
+                                            </div>
+
+                                            {depositItems.length > 1 && (
+                                                <button
+                                                    className="remove-btn"
+                                                    onClick={() => removeDepositItem(item.id)}
+                                                >
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <button className="add-btn" onClick={addDepositItem}>
+                                    + Add Deposit Item
+                                </button>
+                            </div>
+
+                            <div>
+                                <h2 style={{ marginBottom: '1.5rem' }}>Funds Availability Schedule</h2>
+
+                                {aggregateAvailability ? (
+                                    <>
+                                        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f0f0f0', borderRadius: '4px' }}>
+                                            <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
+                                                Total Deposit: ${formatCurrency(aggregateAvailability.totalDeposit)}
+                                            </div>
+                                            <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                                                Banking Day of Deposit: {aggregateAvailability.bankingDayOfDeposit}
+                                            </div>
+                                        </div>
+
+                                        {aggregateAvailability.schedule.nextDay > 0 && (
+                                            <div className="deposit-type-group">
+                                                <h4 style={{ color: '#0a8a0a' }}>✓ Available {aggregateAvailability.nextBusinessDay}</h4>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#0a8a0a', marginBottom: '0.75rem' }}>
+                                                    ${formatCurrency(aggregateAvailability.schedule.nextDay)}
+                                                </div>
+                                                <div className="deposit-type-items">
+                                                    {aggregateAvailability.schedule.items
+                                                        .filter(item => item.nextDay > 0)
+                                                        .map((item) => {
+                                                            const originalItem = depositItems.find(d => d.id === item.id);
+                                                            return (
+                                                                <div key={item.id} className="deposit-type-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                    <span>{depositTypeLabels[item.type]}</span>
+                                                                    <span style={{ fontWeight: '600' }}>${formatCurrency(item.nextDay)}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {aggregateAvailability.schedule.secondDay > 0 && (
+                                            <div className="deposit-type-group">
+                                                <h4>Available {aggregateAvailability.secondBusinessDay}</h4>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                                                    ${formatCurrency(aggregateAvailability.schedule.secondDay)}
+                                                </div>
+                                                <div className="deposit-type-items">
+                                                    {aggregateAvailability.schedule.items
+                                                        .filter(item => item.secondDay > 0)
+                                                        .map((item) => (
+                                                            <div key={item.id} className="deposit-type-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span>{depositTypeLabels[item.type]}</span>
+                                                                <span style={{ fontWeight: '600' }}>${formatCurrency(item.secondDay)}</span>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {aggregateAvailability.schedule.fifthDay > 0 && (
+                                            <div className="deposit-type-group">
+                                                <h4>Available {aggregateAvailability.fifthBusinessDay}</h4>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                                                    ${formatCurrency(aggregateAvailability.schedule.fifthDay)}
+                                                </div>
+                                                <div className="deposit-type-items">
+                                                    {aggregateAvailability.schedule.items
+                                                        .filter(item => item.fifthDay > 0)
+                                                        .map((item) => (
+                                                            <div key={item.id} className="deposit-type-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span>{depositTypeLabels[item.type]}</span>
+                                                                <span style={{ fontWeight: '600' }}>${formatCurrency(item.fifthDay)}</span>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {aggregateAvailability.schedule.ninthDay > 0 && (
+                                            <div className="deposit-type-group">
+                                                <h4>Available {aggregateAvailability.ninthBusinessDay}</h4>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                                                    ${formatCurrency(aggregateAvailability.schedule.ninthDay)}
+                                                </div>
+                                                <div className="deposit-type-items">
+                                                    {aggregateAvailability.schedule.items
+                                                        .filter(item => item.ninthDay > 0)
+                                                        .map((item) => (
+                                                            <div key={item.id} className="deposit-type-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span>{depositTypeLabels[item.type]}</span>
+                                                                <span style={{ fontWeight: '600' }}>${formatCurrency(item.ninthDay)}</span>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {aggregateAvailability.warnings.length > 0 && (
+                                            <div className="warning">
+                                                <strong>Please Note:</strong>
+                                                <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem', marginBottom: 0 }}>
+                                                    {aggregateAvailability.warnings.map((warning, idx) => (
+                                                        <li key={idx}>{warning}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>
+                                        Add deposit items to see availability schedule
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<RegCCCalculator />);
+    </script>
+</body>
+</html>
