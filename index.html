@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reg CC Funds Availability Calculator</title>
+    <title>F&M Bank Funds Availability Calculator</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -137,50 +137,6 @@
         .checkbox-group input[type="checkbox"] {
             width: auto;
             margin: 0;
-        }
-
-        .results {
-            background: #f9f9f9;
-            border-radius: 4px;
-            padding: 1.5rem;
-            border-left: 4px solid #132f25;
-        }
-
-        .results h3 {
-            margin-bottom: 1rem;
-            color: #333;
-        }
-
-        .result-item {
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .result-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .result-label {
-            font-weight: 600;
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .result-value {
-            font-size: 1.1rem;
-            color: #333;
-        }
-
-        .summary {
-            background: #e8eaf6;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-top: 1rem;
-            font-weight: 500;
         }
 
         .warning {
@@ -318,16 +274,6 @@
             border-bottom: none;
         }
 
-        .deposit-type-total {
-            font-weight: 500;
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 2px solid #e0e0e0;
-            color: #1a4d3e;
-            font-size: 1.0625rem;
-            letter-spacing: 0.25px;
-        }
-
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -335,15 +281,7 @@
             margin-bottom: 1.5rem;
         }
 
-        .form-row-thirds {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-row .form-group,
-        .form-row-thirds .form-group {
+        .form-row .form-group {
             margin-bottom: 0;
         }
 
@@ -380,8 +318,7 @@
                 margin-top: 0.5rem;
             }
 
-            .form-row,
-            .form-row-thirds {
+            .form-row {
                 grid-template-columns: 1fr;
             }
         }
@@ -389,18 +326,18 @@
 </head>
 <body>
     <div class="header">
-        <h1>Reg CC Funds Availability Calculator</h1>
-        <p>Calculate when deposited funds will be available based on federal Regulation CC requirements</p>
+        <h1>F&M Bank Funds Availability Calculator</h1>
+        <p>Calculate when deposited funds will be available based on F&M Bank policy and Regulation CC requirements</p>
     </div>
 
     <div id="root"></div>
 
     <div class="footer">
-        <p>This calculator implements federal Regulation CC (12 CFR Part 229) funds availability requirements.</p>
+        <p>This calculator implements F&M Bank's funds availability policy based on federal Regulation CC (12 CFR Part 229) requirements.</p>
     </div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState } = React;
 
         // Business day utilities
         const parseLocalDate = (dateString) => {
@@ -415,15 +352,19 @@
             return `${year}-${month}-${day}`;
         };
 
-        const parseTime = (timeString) => {
-            const [hours, minutes] = timeString.split(':').map(Number);
-            return hours * 60 + minutes;
-        };
-
         const isWeekend = (date) => {
             const day = date.getDay();
             return day === 0 || day === 6;
         };
+
+        const defaultHolidays = [
+            "2026-01-01", "2026-01-19", "2026-02-16", "2026-05-25",
+            "2026-07-03", "2026-09-07", "2026-10-12", "2026-11-11",
+            "2026-11-26", "2026-12-25",
+            "2027-01-01", "2027-01-18", "2027-02-15", "2027-05-31",
+            "2027-07-05", "2027-09-06", "2027-10-11", "2027-11-11",
+            "2027-11-25", "2027-12-24"
+        ];
 
         const isHoliday = (date, holidays) => {
             const dateStr = formatLocalDate(date);
@@ -446,30 +387,20 @@
         const addBusinessDays = (startDate, numDays, holidays) => {
             let current = new Date(startDate);
             let daysAdded = 0;
-
             while (daysAdded < numDays) {
                 current.setDate(current.getDate() + 1);
                 if (isBusinessDay(current, holidays)) {
                     daysAdded++;
                 }
             }
-
             return current;
         };
 
-        const normalizeDepositDate = (depositDate, depositTime, holidays) => {
+        const normalizeDepositDate = (depositDate, holidays) => {
             const date = parseLocalDate(depositDate);
-            const cutoffMinutes = parseTime("14:00"); // Default 2pm cutoff
-            const depositMinutes = parseTime(depositTime);
-
-            if (depositMinutes > cutoffMinutes) {
-                return nextBusinessDay(date, holidays);
-            }
-
             if (isBusinessDay(date, holidays)) {
                 return date;
             }
-
             return nextBusinessDay(date, holidays);
         };
 
@@ -480,314 +411,160 @@
             return Math.floor(diffMs / (1000 * 60 * 60 * 24));
         };
 
-        // Default configuration
-        const defaultHolidays = [
-            "2026-01-01", "2026-01-19", "2026-02-16", "2026-05-25",
-            "2026-07-03", "2026-09-07", "2026-10-12", "2026-11-11",
-            "2026-11-26", "2026-12-25",
-            "2027-01-01", "2027-01-18", "2027-02-15", "2027-05-31",
-            "2027-07-05", "2027-09-06", "2027-10-11", "2027-11-11",
-            "2027-11-25", "2027-12-24",
-            "2028-01-01", "2028-01-17", "2028-02-21", "2028-05-29",
-            "2028-07-04", "2028-09-04", "2028-10-09", "2028-11-10",
-            "2028-11-23", "2028-12-25"
-        ];
-
-        const holidayNames = {
-            "01-01": "New Year's Day",
-            "01-19": "Martin Luther King Jr. Day",
-            "01-18": "Martin Luther King Jr. Day",
-            "01-17": "Martin Luther King Jr. Day",
-            "02-16": "Presidents' Day",
-            "02-15": "Presidents' Day",
-            "02-21": "Presidents' Day",
-            "05-25": "Memorial Day",
-            "05-31": "Memorial Day",
-            "05-29": "Memorial Day",
-            "07-03": "Independence Day (Observed)",
-            "07-04": "Independence Day",
-            "07-05": "Independence Day (Observed)",
-            "09-07": "Labor Day",
-            "09-06": "Labor Day",
-            "09-04": "Labor Day",
-            "10-12": "Columbus Day",
-            "10-11": "Columbus Day",
-            "10-09": "Columbus Day",
-            "11-11": "Veterans Day",
-            "11-10": "Veterans Day (Observed)",
-            "11-26": "Thanksgiving",
-            "11-25": "Thanksgiving",
-            "11-23": "Thanksgiving",
-            "12-24": "Christmas Day (Observed)",
-            "12-25": "Christmas Day"
-        };
-
-        const defaultRules = {
-            cash: { immediate: 1, remaining: 1 },
-            "electronic-payment": { immediate: 1, remaining: 1 },
-            "government-or-official-check": { immediate: 1, remaining: 1 },
-            "on-us-check": { immediate: 1, remaining: 1 },
-            "local-or-other-check": { immediate: 1, remaining: 2 },
-            "nonproprietary-atm-check": { immediate: 5, remaining: 5 },
-            "new-account-check": { immediate: 1, remaining: 9 },
-            exceptionHold: { immediate: 1, remaining: 7 }
-        };
-
-        // Core calculation engine
-        const calculateAvailability = (inputs, rules = defaultRules, holidays = defaultHolidays) => {
-            const {
-                depositDate,
-                depositTime,
-                depositAmount,
-                depositType,
-                accountOpenDate,
-                exceptionHold,
-                largeDepositThreshold = 5525
-            } = inputs;
-
-            const warnings = [];
-            const bankingDayOfDeposit = normalizeDepositDate(depositDate, depositTime, holidays);
-            const nextBusinessDay = addBusinessDays(bankingDayOfDeposit, 1, holidays);
-
-            const accountAgeDays = calculateAccountAge(accountOpenDate, depositDate);
-            const isNewAccount = accountAgeDays <= 30;
-
-            // Deposit types with full availability (no threshold splitting)
-            const fullAvailabilityTypes = [
-                "cash",
-                "electronic-payment",
-                "government-or-official-check",
-                "on-us-check",
-                "nonproprietary-atm-check"
-            ];
-
-            const hasFullAvailability = fullAvailabilityTypes.includes(depositType) && !exceptionHold && !isNewAccount;
-
-            let immediateDays, remainingDays;
-
-            if (exceptionHold) {
-                immediateDays = rules.exceptionHold.immediate;
-                remainingDays = rules.exceptionHold.remaining;
-            } else if (depositType === "new-account-check" || isNewAccount) {
-                immediateDays = rules["new-account-check"].immediate;
-                remainingDays = rules["new-account-check"].remaining;
-                if (isNewAccount && depositType !== "new-account-check") {
-                    warnings.push("Account is 30 days old or less. New account holds apply.");
-                }
-            } else {
-                const typeRules = rules[depositType];
-                if (!typeRules) {
-                    warnings.push(`Unknown deposit type: ${depositType}. Using local check rules.`);
-                    immediateDays = rules["local-or-other-check"].immediate;
-                    remainingDays = rules["local-or-other-check"].remaining;
-                } else {
-                    immediateDays = typeRules.immediate;
-                    remainingDays = typeRules.remaining;
-                }
-            }
-
-            let firstAvailableAmount, firstAvailableDate, remainingAmount, remainingAvailableDate;
-
-            // Full availability types: entire deposit available at once
-            if (hasFullAvailability) {
-                firstAvailableAmount = depositAmount;
-                firstAvailableDate = formatLocalDate(addBusinessDays(bankingDayOfDeposit, immediateDays, holidays));
-                remainingAmount = 0;
-                remainingAvailableDate = firstAvailableDate;
-            }
-            // Threshold-based types: split at threshold
-            else if (depositAmount <= largeDepositThreshold) {
-                firstAvailableAmount = depositAmount;
-                firstAvailableDate = formatLocalDate(addBusinessDays(bankingDayOfDeposit, immediateDays, holidays));
-                remainingAmount = 0;
-                remainingAvailableDate = firstAvailableDate;
-            } else {
-                firstAvailableAmount = largeDepositThreshold;
-                firstAvailableDate = formatLocalDate(addBusinessDays(bankingDayOfDeposit, immediateDays, holidays));
-                remainingAmount = depositAmount - largeDepositThreshold;
-                remainingAvailableDate = formatLocalDate(addBusinessDays(bankingDayOfDeposit, remainingDays, holidays));
-                warnings.push(`Deposit exceeds $${largeDepositThreshold.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} threshold. Amounts over this limit have extended holds.`);
-            }
-
-            // Check for holidays in the date range
-            const endDate = parseLocalDate(remainingAmount > 0 ? remainingAvailableDate : firstAvailableDate);
-            const holidaysInRange = [];
-            let checkDate = new Date(bankingDayOfDeposit);
-
-            while (checkDate <= endDate) {
-                const dateStr = formatLocalDate(checkDate);
-                if (holidays.includes(dateStr)) {
-                    const monthDay = dateStr.substring(5); // Get MM-DD
-                    const holidayName = holidayNames[monthDay] || "Federal Holiday";
-                    holidaysInRange.push(`${holidayName} on ${dateStr}`);
-                }
-                checkDate.setDate(checkDate.getDate() + 1);
-            }
-
-            if (holidaysInRange.length > 0) {
-                warnings.push(...holidaysInRange.map(h => `Federal holiday in hold period: ${h}`));
-            }
-
-            const summary = remainingAmount > 0
-                ? `$${firstAvailableAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} available on ${firstAvailableDate}, remaining $${remainingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} available on ${remainingAvailableDate}`
-                : `Full amount of $${firstAvailableAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} available on ${firstAvailableDate}`;
-
-            return {
-                isNewAccount,
-                bankingDayOfDeposit: formatLocalDate(bankingDayOfDeposit),
-                nextBusinessDay: formatLocalDate(nextBusinessDay),
-                firstAvailableAmount,
-                firstAvailableDate,
-                remainingAmount,
-                remainingAvailableDate,
-                summary,
-                warnings
-            };
-        };
-
         // Deposit type labels
         const depositTypeLabels = {
             "cash": "Cash",
-            "government-or-official-check": "Government/Official Check",
+            "electronic-payment": "Electronic Payment",
+            "wires-ach": "Wires/ACH",
             "on-us-check": "On-Us Check",
-            "local-or-other-check": "Local/Other Check",
-            "nonproprietary-atm-check": "Nonproprietary ATM Check",
-            "new-account-check": "New Account Check"
+            "federal-reserve-check": "Federal Reserve Bank Check",
+            "federal-home-loan-check": "Federal Home Loan Bank Check",
+            "cashiers-certified-check": "Cashier's/Certified/Teller's Check",
+            "us-treasury-check": "U.S. Treasury Check",
+            "us-postal-money-order": "U.S. Postal Money Order",
+            "state-local-govt-check": "State/Local Government Check",
+            "local-or-other-check": "Local/Other Check"
         };
 
-        // Availability tiers (priority order - fastest first)
-        const availabilityTiers = {
-            "cash": { priority: 1, name: "Next Business Day (Cash)" },
-            "electronic-payment": { priority: 1, name: "Next Business Day (Electronic)" },
-            "government-or-official-check": { priority: 2, name: "Next Business Day (Government/Official)" },
-            "on-us-check": { priority: 2, name: "Next Business Day (On-Us)" },
-            "local-or-other-check": { priority: 3, name: "Second Business Day (Local)" },
-            "nonproprietary-atm-check": { priority: 4, name: "Fifth Business Day (ATM)" },
-            "new-account-check": { priority: 5, name: "Extended Hold (New Account)" }
+        // Exception hold reason labels
+        const exceptionHoldReasons = {
+            "none": "None",
+            "large-deposit": "Large Deposit (over $6,725)",
+            "redeposited-check": "Redeposited Check",
+            "repeated-overdrafts": "Repeated Overdrafts",
+            "reasonable-doubt": "Reasonable Cause to Doubt Collectability",
+            "emergency": "Emergency Conditions"
         };
 
-        // Calculate aggregate deposit availability
+        // Calculate aggregate deposit availability per F&M Bank policy
         const calculateAggregateAvailability = (depositItems, globalInputs, holidays = defaultHolidays) => {
-            const bankingDayOfDeposit = normalizeDepositDate(
-                globalInputs.depositDate,
-                globalInputs.depositTime,
-                holidays
-            );
+            const bankingDayOfDeposit = normalizeDepositDate(globalInputs.depositDate, holidays);
             const nextBusinessDay = addBusinessDays(bankingDayOfDeposit, 1, holidays);
             const secondBusinessDay = addBusinessDays(bankingDayOfDeposit, 2, holidays);
-            const fifthBusinessDay = addBusinessDays(bankingDayOfDeposit, 5, holidays);
+            const seventhBusinessDay = addBusinessDays(bankingDayOfDeposit, 7, holidays);
             const ninthBusinessDay = addBusinessDays(bankingDayOfDeposit, 9, holidays);
 
             const accountAgeDays = calculateAccountAge(globalInputs.accountOpenDate, globalInputs.depositDate);
             const isNewAccount = accountAgeDays <= 30;
             const threshold = globalInputs.largeDepositThreshold;
 
-            // Sort items by availability priority
-            const sortedItems = [...depositItems].sort((a, b) => {
-                return availabilityTiers[a.type].priority - availabilityTiers[b.type].priority;
-            });
-
             const schedule = {
                 nextDay: 0,
                 secondDay: 0,
-                fifthDay: 0,
+                seventhDay: 0,
                 ninthDay: 0,
                 items: []
             };
 
             let warnings = [];
-
-            // Track cumulative amounts
+            let cumulative275 = 0; // Track $275 rule usage
             let cumulativeNextDay = 0;
             let cumulativeSecondDay = 0;
 
-            sortedItems.forEach(item => {
+            const exceptionReason = globalInputs.exceptionReason || "none";
+
+            depositItems.forEach(item => {
                 const itemSchedule = {
                     id: item.id,
                     type: item.type,
                     amount: item.amount,
                     nextDay: 0,
                     secondDay: 0,
-                    fifthDay: 0,
+                    seventhDay: 0,
                     ninthDay: 0
                 };
 
-                if (globalInputs.exceptionHold) {
-                    // Exception hold: $threshold next day, remainder 7th day
-                    itemSchedule.nextDay = Math.min(item.amount, Math.max(0, threshold - cumulativeNextDay));
-                    if (item.amount > itemSchedule.nextDay) {
-                        itemSchedule.ninthDay = item.amount - itemSchedule.nextDay; // 7th day in reality
+                // New Account Logic
+                if (isNewAccount && !["cash", "electronic-payment", "wires-ach"].includes(item.type)) {
+                    if (item.type === "local-or-other-check") {
+                        // Other Checks: 7th business day for new accounts
+                        itemSchedule.seventhDay = item.amount;
+                    } else {
+                        // Next-day items: Up to $6,725 next day, excess 9th day
+                        const nextDayAmount = Math.min(item.amount, Math.max(0, threshold - cumulativeNextDay));
+                        itemSchedule.nextDay = nextDayAmount;
+                        const excess = item.amount - nextDayAmount;
+                        if (excess > 0) {
+                            itemSchedule.ninthDay = excess;
+                        }
+                        cumulativeNextDay += itemSchedule.nextDay;
                     }
-                    cumulativeNextDay += itemSchedule.nextDay;
-                } else if (item.type === "cash" || item.type === "electronic-payment") {
-                    // Full amount next business day - NO HOLDS
-                    itemSchedule.nextDay = item.amount;
-                    cumulativeNextDay += item.amount;
-                } else if (item.type === "on-us-check") {
-                    // Full amount next business day - NO HOLDS
-                    itemSchedule.nextDay = item.amount;
-                    cumulativeNextDay += item.amount;
-                } else if (item.type === "government-or-official-check") {
-                    // Full amount next business day (when eligibility requirements met)
-                    itemSchedule.nextDay = item.amount;
-                    cumulativeNextDay += item.amount;
-                } else if (isNewAccount && item.type !== "cash" && item.type !== "electronic-payment") {
-                    // New account check: $threshold next day, remainder 9th day
-                    itemSchedule.nextDay = Math.min(item.amount, Math.max(0, threshold - cumulativeNextDay));
-                    itemSchedule.ninthDay = item.amount - itemSchedule.nextDay;
-                    cumulativeNextDay += itemSchedule.nextDay;
-                } else if (item.type === "local-or-other-check") {
-                    // Reg CC 229.12(b): $200 on first business day, remainder up to $5,525 total on second business day
-                    const firstDayAmount = cumulativeNextDay < 200 ? Math.min(200, item.amount) : 0;
-                    itemSchedule.nextDay = firstDayAmount;
+                }
+                // Exception Hold Logic
+                else if (exceptionReason !== "none") {
+                    if (item.type === "on-us-check") {
+                        // On-Us checks: Excess over $6,725 available 2nd business day
+                        const nextDayAmount = Math.min(item.amount, Math.max(0, threshold - cumulativeNextDay));
+                        itemSchedule.nextDay = nextDayAmount;
+                        const excess = item.amount - nextDayAmount;
+                        if (excess > 0) {
+                            itemSchedule.secondDay = excess;
+                        }
+                        cumulativeNextDay += itemSchedule.nextDay;
+                    } else if (["federal-reserve-check", "federal-home-loan-check", "cashiers-certified-check",
+                                 "us-treasury-check", "us-postal-money-order", "state-local-govt-check"].includes(item.type)) {
+                        // Next-day checks: No hold on first $6,725, excess 7th day
+                        const nextDayAmount = Math.min(item.amount, Math.max(0, threshold - cumulativeNextDay));
+                        itemSchedule.nextDay = nextDayAmount;
+                        const excess = item.amount - nextDayAmount;
+                        if (excess > 0) {
+                            itemSchedule.seventhDay = excess;
+                        }
+                        cumulativeNextDay += itemSchedule.nextDay;
+                    } else {
+                        // Other checks with exception hold: $275, $6,450, remainder 7th day
+                        if (cumulative275 < 275) {
+                            const amount275 = Math.min(item.amount, 275 - cumulative275);
+                            itemSchedule.nextDay = amount275;
+                            cumulative275 += amount275;
+                            cumulativeNextDay += amount275;
+                        }
 
-                    // Remaining amount goes to second business day (limited by threshold)
-                    const remainingAmount = item.amount - firstDayAmount;
-                    const totalAvailableBySecondDay = cumulativeNextDay + cumulativeSecondDay + firstDayAmount;
-                    const secondDayCapacity = Math.max(0, threshold - totalAvailableBySecondDay);
-                    itemSchedule.secondDay = Math.min(remainingAmount, secondDayCapacity);
+                        const remaining = item.amount - itemSchedule.nextDay;
+                        if (remaining > 0) {
+                            const totalThreshold = threshold;
+                            const available2nd = Math.min(remaining, Math.max(0, totalThreshold - cumulativeNextDay - cumulativeSecondDay));
+                            itemSchedule.secondDay = available2nd;
+                            cumulativeSecondDay += available2nd;
 
-                    // Any excess over threshold goes to later days (would need extended hold logic)
-                    const excess = remainingAmount - itemSchedule.secondDay;
-                    if (excess > 0) {
-                        // For now, this would go to a later availability period
-                        itemSchedule.fifthDay = excess;
+                            const excessOver = remaining - available2nd;
+                            if (excessOver > 0) {
+                                itemSchedule.seventhDay = excessOver;
+                            }
+                        }
                     }
-
-                    cumulativeNextDay += itemSchedule.nextDay;
-                    cumulativeSecondDay += itemSchedule.secondDay;
-                } else if (item.type === "nonproprietary-atm-check") {
-                    // $200 minimum next day (if not already met), remainder fifth business day
-                    const minimumNextDay = cumulativeNextDay < 200 ? Math.min(200, item.amount) : 0;
-                    itemSchedule.nextDay = minimumNextDay;
-                    itemSchedule.fifthDay = item.amount - minimumNextDay;
-                    cumulativeNextDay += itemSchedule.nextDay;
+                }
+                // General Policy (No holds)
+                else {
+                    if (["cash", "electronic-payment", "wires-ach", "on-us-check", "federal-reserve-check",
+                         "federal-home-loan-check", "cashiers-certified-check", "us-treasury-check",
+                         "us-postal-money-order", "state-local-govt-check"].includes(item.type)) {
+                        // All available next business day
+                        itemSchedule.nextDay = item.amount;
+                        cumulativeNextDay += item.amount;
+                    } else {
+                        // Local/Other checks: 1st business day per F&M general policy
+                        itemSchedule.nextDay = item.amount;
+                        cumulativeNextDay += item.amount;
+                    }
                 }
 
                 schedule.items.push(itemSchedule);
                 schedule.nextDay += itemSchedule.nextDay;
                 schedule.secondDay += itemSchedule.secondDay;
-                schedule.fifthDay += itemSchedule.fifthDay;
+                schedule.seventhDay += itemSchedule.seventhDay;
                 schedule.ninthDay += itemSchedule.ninthDay;
             });
 
-            // Add warnings
-            // Mock high-level stats for NSF and returned items
-            warnings.push("Recent Activity: 2 returned items totaling $3,125.50 in the last 30 days");
-            warnings.push("Account Status: 1 NSF occurrence on 09/20/2026");
-
             if (isNewAccount) {
                 warnings.push("Account is 30 days old or less. Extended holds may apply to check deposits.");
-            }
-            if (globalInputs.exceptionHold) {
-                warnings.push("Exception hold applied. Extended availability times in effect.");
             }
 
             return {
                 bankingDayOfDeposit: formatLocalDate(bankingDayOfDeposit),
                 nextBusinessDay: formatLocalDate(nextBusinessDay),
                 secondBusinessDay: formatLocalDate(secondBusinessDay),
-                fifthBusinessDay: formatLocalDate(fifthBusinessDay),
+                seventhBusinessDay: formatLocalDate(seventhBusinessDay),
                 ninthBusinessDay: formatLocalDate(ninthBusinessDay),
                 schedule,
                 warnings,
@@ -801,19 +578,15 @@
             const thirtyDaysAgo = new Date(today);
             thirtyDaysAgo.setDate(today.getDate() - 30);
 
-            // Default to 10:00 AM to ensure deposits are before cutoff
-            const currentTime = '10:00';
-
             const [depositItems, setDepositItems] = useState([
-                { id: 1, amount: 1000, type: "local-or-other-check" }
+                { id: 1, amount: 0, type: "local-or-other-check" }
             ]);
 
             const [globalInputs, setGlobalInputs] = useState({
                 depositDate: formatLocalDate(today),
-                depositTime: currentTime,
                 accountOpenDate: formatLocalDate(thirtyDaysAgo),
-                exceptionHold: false,
-                largeDepositThreshold: 5525
+                largeDepositThreshold: 6725,
+                exceptionReason: "none"
             });
 
             const [nextId, setNextId] = useState(2);
@@ -832,24 +605,24 @@
             const handleGlobalChange = (field, value) => {
                 setGlobalInputs(prev => ({
                     ...prev,
-                    [field]: field === 'largeDepositThreshold'
-                        ? parseCurrency(value)
-                        : field === 'exceptionHold'
-                        ? value
-                        : value
+                    [field]: value
                 }));
             };
 
             const handleItemChange = (id, field, value) => {
                 setDepositItems(prev => prev.map(item =>
                     item.id === id
-                        ? { ...item, [field]: field === 'amount' ? parseCurrency(value) : value }
+                        ? { ...item, [field]: field === 'amount' ? parseFloat(value) || 0 : value }
                         : item
                 ));
             };
 
             const addDepositItem = () => {
-                setDepositItems(prev => [...prev, { id: nextId, amount: 0, type: "local-or-other-check" }]);
+                setDepositItems(prev => [...prev, {
+                    id: nextId,
+                    amount: 0,
+                    type: "local-or-other-check"
+                }]);
                 setNextId(prev => prev + 1);
             };
 
@@ -857,7 +630,6 @@
                 setDepositItems(prev => prev.filter(item => item.id !== id));
             };
 
-            // Calculate aggregate availability
             const aggregateAvailability = depositItems.length > 0
                 ? calculateAggregateAvailability(depositItems, globalInputs)
                 : null;
@@ -869,7 +641,7 @@
                             <div>
                                 <h2 style={{ marginBottom: '1.5rem' }}>Deposit Information</h2>
 
-                                <div className="form-row-thirds">
+                                <div className="form-row">
                                     <div className="form-group">
                                         <label htmlFor="depositDate">Deposit Date</label>
                                         <input
@@ -877,16 +649,6 @@
                                             type="date"
                                             value={globalInputs.depositDate}
                                             onChange={(e) => handleGlobalChange('depositDate', e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="depositTime">Deposit Time</label>
-                                        <input
-                                            id="depositTime"
-                                            type="time"
-                                            value={globalInputs.depositTime}
-                                            onChange={(e) => handleGlobalChange('depositTime', e.target.value)}
                                         />
                                     </div>
 
@@ -901,42 +663,34 @@
                                     </div>
                                 </div>
 
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="largeDepositThreshold">Large Deposit Threshold</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <span style={{
-                                                position: 'absolute',
-                                                left: '0.75rem',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                color: '#666',
-                                                pointerEvents: 'none'
-                                            }}>$</span>
-                                            <input
-                                                id="largeDepositThreshold"
-                                                type="text"
-                                                value={formatCurrency(globalInputs.largeDepositThreshold)}
-                                                onChange={(e) => handleGlobalChange('largeDepositThreshold', e.target.value)}
-                                                style={{ paddingLeft: '1.5rem' }}
-                                            />
-                                        </div>
+                                <div className="form-group">
+                                    <label>Large Deposit Threshold</label>
+                                    <div style={{
+                                        padding: '0.875rem 1rem',
+                                        background: '#f5f5f5',
+                                        borderRadius: '8px',
+                                        fontSize: '1rem',
+                                        fontWeight: '600',
+                                        color: '#1a4d3e'
+                                    }}>
+                                        $6,725.00
                                     </div>
+                                </div>
 
-                                    <div className="form-group">
-                                        <div className="checkbox-group" style={{ marginTop: '1.8rem' }}>
-                                            <input
-                                                id="exceptionHold"
-                                                type="checkbox"
-                                                checked={globalInputs.exceptionHold}
-                                                onChange={(e) => handleGlobalChange('exceptionHold', e.target.checked)}
-                                            />
-                                            <label htmlFor="exceptionHold">Exception Hold</label>
-                                        </div>
-                                        <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem', marginLeft: '0' }}>
-                                            Select if Reg CC exception hold applies
-                                        </p>
-                                    </div>
+                                <div className="form-group">
+                                    <label htmlFor="exceptionReason">Exception Hold Reason</label>
+                                    <select
+                                        id="exceptionReason"
+                                        value={globalInputs.exceptionReason}
+                                        onChange={(e) => handleGlobalChange('exceptionReason', e.target.value)}
+                                    >
+                                        <option value="none">None</option>
+                                        <option value="large-deposit">Large Deposit (over $6,725)</option>
+                                        <option value="redeposited-check">Redeposited Check</option>
+                                        <option value="repeated-overdrafts">Repeated Overdrafts</option>
+                                        <option value="reasonable-doubt">Reasonable Cause to Doubt Collectability</option>
+                                        <option value="emergency">Emergency Conditions</option>
+                                    </select>
                                 </div>
 
                                 <div className="section-divider">
@@ -945,48 +699,68 @@
 
                                 <div className="deposit-items-list">
                                     {depositItems.map((item) => (
-                                        <div key={item.id} className="deposit-item">
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <label>Amount</label>
-                                                <div style={{ position: 'relative' }}>
-                                                    <span style={{
-                                                        position: 'absolute',
-                                                        left: '0.75rem',
-                                                        top: '50%',
-                                                        transform: 'translateY(-50%)',
-                                                        color: '#666',
-                                                        pointerEvents: 'none'
-                                                    }}>$</span>
-                                                    <input
-                                                        type="text"
-                                                        value={formatCurrency(item.amount)}
-                                                        onChange={(e) => handleItemChange(item.id, 'amount', e.target.value)}
-                                                        style={{ paddingLeft: '1.5rem' }}
-                                                    />
+                                        <div key={item.id} style={{ marginBottom: '1.5rem', padding: '1.5rem', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                                    <label>Amount</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <span style={{
+                                                            position: 'absolute',
+                                                            left: '0.75rem',
+                                                            top: '50%',
+                                                            transform: 'translateY(-50%)',
+                                                            color: '#666',
+                                                            pointerEvents: 'none'
+                                                        }}>$</span>
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={item.amount}
+                                                            onChange={(e) => handleItemChange(item.id, 'amount', e.target.value)}
+                                                            onFocus={(e) => e.target.select()}
+                                                            style={{ paddingLeft: '1.5rem' }}
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <label>Deposit Type</label>
-                                                <select
-                                                    value={item.type}
-                                                    onChange={(e) => handleItemChange(item.id, 'type', e.target.value)}
-                                                >
-                                                    <option value="cash">Cash</option>
-                                                    <option value="government-or-official-check">Government/Official Check</option>
-                                                    <option value="on-us-check">On-Us Check</option>
-                                                    <option value="local-or-other-check">Local/Other Check</option>
-                                                    <option value="nonproprietary-atm-check">Nonproprietary ATM Check</option>
-                                                    <option value="new-account-check">New Account Check</option>
-                                                </select>
+                                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                                    <label>Deposit Type</label>
+                                                    <select
+                                                        value={item.type}
+                                                        onChange={(e) => handleItemChange(item.id, 'type', e.target.value)}
+                                                    >
+                                                        <option value="cash">Cash</option>
+                                                        <option value="electronic-payment">Electronic Payment</option>
+                                                        <option value="wires-ach">Wires/ACH</option>
+                                                        <option value="on-us-check">On-Us Check</option>
+                                                        <option value="federal-reserve-check">Federal Reserve Bank Check</option>
+                                                        <option value="federal-home-loan-check">Federal Home Loan Bank Check</option>
+                                                        <option value="cashiers-certified-check">Cashier's/Certified/Teller's Check</option>
+                                                        <option value="us-treasury-check">U.S. Treasury Check</option>
+                                                        <option value="us-postal-money-order">U.S. Postal Money Order</option>
+                                                        <option value="state-local-govt-check">State/Local Government Check</option>
+                                                        <option value="local-or-other-check">Local/Other Check</option>
+                                                    </select>
+                                                </div>
                                             </div>
 
                                             {depositItems.length > 1 && (
                                                 <button
-                                                    className="remove-btn"
                                                     onClick={() => removeDepositItem(item.id)}
+                                                    style={{
+                                                        background: '#d32f2f',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        padding: '0.5rem 1rem',
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        marginTop: '1rem',
+                                                        fontSize: '0.875rem',
+                                                        fontWeight: '500'
+                                                    }}
                                                 >
-                                                    Remove
+                                                    Remove Item
                                                 </button>
                                             )}
                                         </div>
@@ -1021,15 +795,12 @@
                                                 <div className="deposit-type-items">
                                                     {aggregateAvailability.schedule.items
                                                         .filter(item => item.nextDay > 0)
-                                                        .map((item) => {
-                                                            const originalItem = depositItems.find(d => d.id === item.id);
-                                                            return (
-                                                                <div key={item.id} className="deposit-type-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                    <span>{depositTypeLabels[item.type]}</span>
-                                                                    <span style={{ fontWeight: '600' }}>${formatCurrency(item.nextDay)}</span>
-                                                                </div>
-                                                            );
-                                                        })}
+                                                        .map((item) => (
+                                                            <div key={item.id} className="deposit-type-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span>{depositTypeLabels[item.type]}</span>
+                                                                <span style={{ fontWeight: '600' }}>${formatCurrency(item.nextDay)}</span>
+                                                            </div>
+                                                        ))}
                                                 </div>
                                             </div>
                                         )}
@@ -1053,19 +824,19 @@
                                             </div>
                                         )}
 
-                                        {aggregateAvailability.schedule.fifthDay > 0 && (
+                                        {aggregateAvailability.schedule.seventhDay > 0 && (
                                             <div className="deposit-type-group">
-                                                <h4>Available {aggregateAvailability.fifthBusinessDay}</h4>
+                                                <h4>Available {aggregateAvailability.seventhBusinessDay}</h4>
                                                 <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.75rem' }}>
-                                                    ${formatCurrency(aggregateAvailability.schedule.fifthDay)}
+                                                    ${formatCurrency(aggregateAvailability.schedule.seventhDay)}
                                                 </div>
                                                 <div className="deposit-type-items">
                                                     {aggregateAvailability.schedule.items
-                                                        .filter(item => item.fifthDay > 0)
+                                                        .filter(item => item.seventhDay > 0)
                                                         .map((item) => (
                                                             <div key={item.id} className="deposit-type-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                                 <span>{depositTypeLabels[item.type]}</span>
-                                                                <span style={{ fontWeight: '600' }}>${formatCurrency(item.fifthDay)}</span>
+                                                                <span style={{ fontWeight: '600' }}>${formatCurrency(item.seventhDay)}</span>
                                                             </div>
                                                         ))}
                                                 </div>
@@ -1114,7 +885,6 @@
             );
         }
 
-        // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<RegCCCalculator />);
     </script>
